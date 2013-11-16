@@ -41,6 +41,7 @@
 #include <linux/i2c/isa1200.h>
 #include <linux/dma-mapping.h>
 #include <linux/i2c/bq27520.h>
+#include <linux/fastchg.h>
 
 #ifdef CONFIG_TOUCHSCREEN_MELFAS
 #define TOUCHSCREEN_IRQ 		125  
@@ -705,7 +706,7 @@ static struct regulator_init_data saw_s0_init_data = {
 			.name = "8901_s0",
 			.valid_ops_mask = REGULATOR_CHANGE_VOLTAGE,
 			.min_uV = 800000,
-			.max_uV = 1250000,
+			.max_uV = 1350000,
 		},
 		.consumer_supplies = vreg_consumers_8901_S0,
 		.num_consumer_supplies = ARRAY_SIZE(vreg_consumers_8901_S0),
@@ -4726,9 +4727,20 @@ static void fsa9480_usb_cb(bool attached)
 
 #ifdef CONFIG_BATTERY_SEC
 	switch(set_cable_status) {
+#ifdef CONFIG_FORCE_FAST_CHARGE
+      case CABLE_TYPE_USB:
+  if (force_fast_charge != 0) {
+  value.intval = POWER_SUPPLY_TYPE_MAINS;
+  printk(KERN_ERR "fast charce is enabled, value: %d\n", force_fast_charge);
+  } else {
+  value.intval = POWER_SUPPLY_TYPE_USB;
+  }
+  break;
+#else 
 		case CABLE_TYPE_USB:
 			value.intval = POWER_SUPPLY_TYPE_USB;
 			break;
+#endif
 		case CABLE_TYPE_NONE:
 			value.intval = POWER_SUPPLY_TYPE_BATTERY;
 			break;
@@ -8067,7 +8079,7 @@ static struct regulator_consumer_supply vreg_consumers_PM8901_S4_PC[] = {
 /* RPM early regulator constraints */
 static struct rpm_regulator_init_data rpm_regulator_early_init_data[] = {
 	/*	 ID       a_on pd ss min_uV   max_uV   init_ip    freq */
-	RPM_SMPS(PM8058_S0, 0, 1, 1,  500000, 1250000, SMPS_HMIN, 1p60),
+	RPM_SMPS(PM8058_S0, 0, 1, 1,  500000, 1350000, SMPS_HMIN, 1p60),
 	RPM_SMPS(PM8058_S1, 0, 1, 1,  500000, 1250000, SMPS_HMIN, 1p60),
 };
 
